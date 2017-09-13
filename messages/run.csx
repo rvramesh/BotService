@@ -9,6 +9,8 @@ using Newtonsoft.Json;
 using Microsoft.Bot.Builder.Azure;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
+using Microsoft.Bot.Builder.ConnectorEx;
+using Microsoft.Azure.WebJobs.Host;
 
 // Bot Storage: Register the optional private state storage for your bot. 
 
@@ -24,7 +26,6 @@ using Microsoft.Bot.Connector;
 public static async Task<object> Run(HttpRequestMessage req, TraceWriter log)
 {
     log.Info($"Webhook was triggered!");
-
     // Initialize the azure bot
     using (BotService.Initialize())
     {
@@ -45,11 +46,13 @@ public static async Task<object> Run(HttpRequestMessage req, TraceWriter log)
             switch (activity.GetActivityType())
             {
                 case ActivityTypes.Message:
+                    log.Info(jsonContent);
                     await Conversation.SendAsync(activity, () => new EchoDialog());
                     break;
                 case ActivityTypes.ConversationUpdate:
                     var client = new ConnectorClient(new Uri(activity.ServiceUrl));
                     IConversationUpdateActivity update = activity;
+
                     if (update.MembersAdded.Any())
                     {
                         var reply = activity.CreateReply();
